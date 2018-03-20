@@ -2,6 +2,7 @@
 config.js
 LAMBDA_crawlGoodFon/node_modules/
 LAMBDA_crawlGoodFon/tmp/
+LAMBDA_getCategories/node_modules/
 
 
 # Logs
