@@ -1,5 +1,5 @@
 #ignore all constant files
-LAMBDA_crawlGoodFon/config.js
+config.js
 LAMBDA_crawlGoodFon/node_modules/
 LAMBDA_crawlGoodFon/tmp/
 
