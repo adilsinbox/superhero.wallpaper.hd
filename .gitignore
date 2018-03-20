@@ -1,3 +1,9 @@
+#ignore all constant files
+LAMBDA_crawlGoodFon/config.js
+LAMBDA_crawlGoodFon/node_modules/
+LAMBDA_crawlGoodFon/tmp/
+
+
 # Logs
 logs
 *.log
