@@ -1,7 +1,11 @@
+// ---- LOCAL DEBUGGING CONFIGURATION ------- //
+
 // function callback(error, message){
 //     console.log(message);
 //     process.exit();
 // };
+
+// ---- END OF LOCAL DEBUGGING CONFIGURATION ------- //
 
 var mysql = require("mysql");
 var AWS = require('aws-sdk');
