@@ -1,9 +1,8 @@
 #ignore all constant files
 config.js
 LAMBDA_crawlGoodFon/
-LAMBDA_crawlGoodFon/tmp/
 LAMBDA_getCategories/node_modules/
-
+LAMBDA_getImagesByCategory/node_modules/
 
 # Logs
 logs

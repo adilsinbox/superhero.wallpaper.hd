@@ -1,16 +1,68 @@
+// ---- LOCAL DEBUGGING CONFIGURATION ------- //
+
+// var event = {  
+//     "Records":[  
+//         {  
+//             "eventVersion":"2.0",
+//             "eventSource":"aws:s3",
+//             "awsRegion":"us-east-1",
+//             "eventTime":"1970-01-01T00:00:00.000Z",
+//             "eventName":"ObjectCreated:Put",
+//             "userIdentity":{  
+//                 "principalId":"AIDAJDPLRKLG7UEXAMPLE"
+//             },
+//             "requestParameters":{  
+//                 "sourceIPAddress":"127.0.0.1"
+//             },
+//             "responseElements":{  
+//                 "x-amz-request-id":"C3D13FE58DE4C810",
+//                 "x-amz-id-2":"FMyUVURIY8/IgAtTv8xRjskZQpcIZ9KG4V5Wp6S7S/JRWeUWerMUE5JgHvANOjpD"
+//             },
+//             "s3":{  
+//                 "s3SchemaVersion":"1.0",
+//                 "configurationId":"testConfigRule",
+//                 "bucket":{  
+//                     "name":"com.teamavengers.images",
+//                     "ownerIdentity":{  
+//                         "principalId":"A3NL1KOZZKExample"
+//                     },
+//                     "arn":"arn:aws:s3:::mybucket"
+//                 },
+//                 "object":{  
+//                     "key":"inspirational/s86PF6E95qawWjwE8ZgQhfg6nQwXaseh.jpg",
+//                     "size":1024,
+//                     "eTag":"d41d8cd98f00b204e9800998ecf8427e",
+//                     "versionId":"096fKKXTRTtl3on89fVO.nfljtsv6qko",
+//                     "sequencer":"0055AED6DCD90281E5"
+//                 }
+//             }
+//         }
+//     ],
+//     "body-json": {
+//         "category": "1"
+//     }
+// };
+
 // function callback(error, message){
 //     console.log(message);
 //     process.exit();
 // };
 
+// ---- END OF LOCAL DEBUGGING CONFIGURATION ------- //
+
 var mysql = require("mysql");
 var AWS = require('aws-sdk');
+
 const constants = require('./config');
 
 
 exports.handler = function(event, context, callback) {
     //this parameter immediately return our response as soon as callback is called
     context.callbackWaitsForEmptyEventLoop = false;
+
+    //get category ID passed as a POST parameter from API gateway
+    let jsonBody = event['body-json'];
+    const CATEGORY = jsonBody.category;
     
     var ssm = new AWS.SSM();
     var params = {
@@ -19,7 +71,8 @@ exports.handler = function(event, context, callback) {
             constants.DB_USER,
             constants.DB_PASSWORD,
             constants.DB_DATABASE,
-            constants.S3_COVER_BASE_URL
+            constants.S3_THUMB_URL,
+            constants.S3_FULL_URL
         ],
         WithDecryption: true
     };
@@ -43,7 +96,8 @@ exports.handler = function(event, context, callback) {
                 password: null,
                 database: null
             },
-            s3_cover_image_base_url = null;
+            s3_thumb_url = null,
+            s3_full_url = null;
 
             data.Parameters.map(param => {
                 switch(param.Name){
@@ -63,8 +117,12 @@ exports.handler = function(event, context, callback) {
                     DB_DETAILS.database = param.Value;
                     break;
 
-                    case constants.S3_COVER_BASE_URL:
-                    s3_cover_image_base_url = param.Value;
+                    case constants.S3_THUMB_URL:
+                    s3_thumb_url = param.Value;
+                    break;
+
+                    case constants.S3_FULL_URL:
+                    s3_full_url = param.Value;
                     break;
                     
                     default:
@@ -74,10 +132,10 @@ exports.handler = function(event, context, callback) {
             
             //our database configuration. I am using an RDS MySQL instance on AWS
             let db = mysql.createConnection(DB_DETAILS);
-            
+
             db.query(
-                `select id, name, concat('${s3_cover_image_base_url}', cover_image) as cover_image from category`,
-                [],
+                `select id, concat('${s3_thumb_url}', name) as thumb, concat('${s3_full_url}', name) as full from image where category_id = ?`,
+                [CATEGORY],
                 function (err, result, status) {
                     if(err){
                         let response = {
@@ -97,6 +155,7 @@ exports.handler = function(event, context, callback) {
                             "err": null
                         }
                         callback(null, response);
+                        
                     }
                 }
             );
