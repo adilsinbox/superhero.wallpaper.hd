@@ -31,7 +31,7 @@ exports.handler = function(event, context, callback) {
     ssm.getParameters(params, function(err, data) {
         if (err){
             let response = {
-                "status": 1,
+                "status": 0,
                 "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                 "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                 "data": null,
@@ -85,19 +85,19 @@ exports.handler = function(event, context, callback) {
                 function (err, result, status) {
                     if(err){
                         let response = {
-                            "status": 1,
+                            "status": 0,
                             "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                             "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                             "data": null,
-                            "err": JSON.stringify(err)
+                            "err": err
                         }
                         callback(null, response);
                     }else{
                         let response = {
-                            "status": 0,
+                            "status": 1,
                             "msg": "command completed successfully",
                             "mobile_msg": "command completed successfully",
-                            "data": JSON.stringify(result),
+                            "data": result,
                             "err": null
                         }
                         callback(null, response);

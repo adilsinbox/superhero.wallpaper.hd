@@ -21,18 +21,19 @@ var moment = require("moment");
 var AWS = require('aws-sdk');
 
 const constants = require('./config');
+//databaseURL below is provided in the FCM console.
+admin.initializeApp({
+    credential: admin.credential.cert(constants.FCM_SERVICE_ACCOUNT),
+    databaseURL: constants.FCM_DB_URL
+});
+//we are initializing the firebase admin outside of handler function on purpose.
+//read more about it here https://groups.google.com/forum/#!topic/firebase-talk/aBonTOiQJWA
 
 exports.handler = (event, context, callback) => {
     
     //setting the below attribute ensures our Lambda function returns control as soon as callback() is invoked
     //it does not wait for empty loop scenarios
     context.callbackWaitsForEmptyEventLoop = false;
-    
-    //databaseURL below is provided in the FCM console.
-    admin.initializeApp({
-        credential: admin.credential.cert(constants.FCM_SERVICE_ACCOUNT),
-        databaseURL: constants.FCM_DB_URL
-    });
     
     //for local console testing we can use below hardcoded values
     // var fcm = 'dnsZAwtjO00:APA91bHiftMExHxxtsmKv-48Wp-t0sa6l3GKuRCqEvErALcPCiZeg2HO84EfXpLLBR90JkfoeHQym95bTTYBxEPjrjdVTok0smu_1Fal_40z8au2QvfFa6yn9P5LybEpLWdUPnUupAK0';
@@ -62,12 +63,14 @@ exports.handler = (event, context, callback) => {
     ssm.getParameters(params, function(err, data) {
         if (err){
             let response = {
-                "status": 1,
+                "status": 0,
                 "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                 "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                 "data": null,
-                "err": JSON.stringify(err)
+                "err": err
             }
+            //delete the firebase object. This is especially important in lambda
+            //admin.app('[DEFAULT]').delete();
             callback(null, response);
         }
         else{
@@ -108,14 +111,15 @@ exports.handler = (event, context, callback) => {
                 "SELECT * FROM user WHERE mobile_id = ?",
                 [mobile_id],
                 function (err, users) {
-                    
+                    //delete the firebase object. This is especially important in lambda
+                    //admin.app('[DEFAULT]').delete();
                     if(err){
                         let response = {
-                            "status": 1,
+                            "status": 0,
                             "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                             "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                             "data": null,
-                            "err": JSON.stringify(err)
+                            "err": err
                         }
                         callback(null, response);
                     }else{
@@ -128,12 +132,14 @@ exports.handler = (event, context, callback) => {
                                 function (err, status) {
                                     
                                     if(err){
+                                        //delete the firebase object. This is especially important in lambda
+                                        //admin.app('[DEFAULT]').delete();
                                         let response = {
-                                            "status": 1,
+                                            "status": 0,
                                             "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                             "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                             "data": null,
-                                            "err": JSON.stringify(err)
+                                            "err": err
                                         }
                                         callback(null, response);
                                     }else{
@@ -141,27 +147,27 @@ exports.handler = (event, context, callback) => {
                                         admin.messaging().subscribeToTopic(fcm, "general")
                                         .then(function (fcmResp) {
                                             //delete the firebase object. This is especially important in lambda
-                                            admin.app('[DEFAULT]').delete();
+                                            //admin.app('[DEFAULT]').delete();
                                             
                                             let response = {
-                                                "status": 0,
+                                                "status": 1,
                                                 "msg": "fcm subscribed sucessfully",
                                                 "mobile_msg": "fcm subscribed sucessfully",
-                                                "data": {},
+                                                "data": fcmResp,
                                                 "err": null
                                             }
                                             callback(null, response);
                                         })
                                         .catch(function (fcmError) {
                                             //delete the firebase object. This is especially important in lambda
-                                            admin.app('[DEFAULT]').delete();
+                                            //admin.app('[DEFAULT]').delete();
                                             
                                             let response = {
-                                                "status": 1,
+                                                "status": 0,
                                                 "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                 "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                 "data": null,
-                                                "err": JSON.stringify(err)
+                                                "err": fcmError
                                             }
                                             callback(null, response);
                                         });
@@ -182,12 +188,14 @@ exports.handler = (event, context, callback) => {
                                     function (err, status) {
                                         
                                         if (err) {
+                                            //delete the firebase object. This is especially important in lambda
+                                            //admin.app('[DEFAULT]').delete();
                                             let response = {
-                                                "status": 1,
+                                                "status": 0,
                                                 "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                 "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                 "data": null,
-                                                "err": JSON.stringify(err)
+                                                "err": err
                                             }
                                             callback(null, response);
                                         } else {
@@ -195,10 +203,10 @@ exports.handler = (event, context, callback) => {
                                             admin.messaging().subscribeToTopic(fcm, "general")
                                             .then(function (fcmResp) {
                                                 //delete the firebase object. This is especially important in lambda
-                                                admin.app('[DEFAULT]').delete();
+                                                //admin.app('[DEFAULT]').delete();
                                                 
                                                 let response = {
-                                                    "status": 0,
+                                                    "status": 1,
                                                     "msg": "fcm subscribed sucessfully",
                                                     "mobile_msg": "fcm subscribed sucessfully",
                                                     "data": fcmResp,
@@ -208,14 +216,14 @@ exports.handler = (event, context, callback) => {
                                             })
                                             .catch(function (fcmError) {
                                                 //delete the firebase object. This is especially important in lambda
-                                                admin.app('[DEFAULT]').delete();
+                                                //admin.app('[DEFAULT]').delete();
                                                 
                                                 let response = {
-                                                    "status": 1,
+                                                    "status": 0,
                                                     "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                     "mobile_msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
                                                     "data": null,
-                                                    "err": JSON.stringify(fcmError)
+                                                    "err": fcmError
                                                 }
                                                 callback(null, response);
                                             });
