@@ -1,16 +1,5 @@
 // ---- LOCAL DEBUGGING CONFIGURATION ------- //
 
-// var event = {  
-//     "body-json": {
-//         title: "notificaiton title",
-//         message: "notification body",
-//         type: "broadcast",
-//         superhero: 69,
-//         image_thumb_url: "http://d1eekkxccru7xx.cloudfront.net/300x300/756813_1511880322.jpeg",
-//         image_full_url: "http://d1eekkxccru7xx.cloudfront.net/original/756813_1511880322.jpeg"
-//     }
-// };
-
 // function callback(error, message){
 //     console.log(message);
 //     process.exit();
@@ -35,22 +24,15 @@ exports.handler = (event, context, callback) => {
     //this parameter immediately return our response as soon as callback is called
     context.callbackWaitsForEmptyEventLoop = false;
     
-    var jsonBody = event['body-json'];
-
-    // notification: {
-    //     title: jsonBody.title,
-    //     body: jsonBody.message
-    // },
-    
     //for production lamdba use
     var payload = {
         data: {
-            title: jsonBody.title,
-            message: jsonBody.message,
-            type: jsonBody.type,
-            category: jsonBody.category,
-            image_thumb_url: jsonBody.image_thumb_url,
-            image_full_url: jsonBody.image_full_url
+            title: "null",
+            message: "null",
+            type: "favorite",
+            category: "null",
+            image_thumb_url: "null",
+            image_full_url: "null"
         }
     };
     

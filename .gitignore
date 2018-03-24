@@ -5,6 +5,7 @@ LAMBDA_getCategories/node_modules/
 LAMBDA_getImagesByCategory/node_modules/
 LAMBDA_fcmSubscribe/node_modules/
 LAMBDA_fcmNotify/node_modules/
+LAMBDA_scheduleSetFromFavorites/node_modules/
 
 # Logs
 logs
