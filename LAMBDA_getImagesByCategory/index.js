@@ -43,7 +43,7 @@ s3_full_url = null;
 
 exports.handler = function(event, context, callback) {
     //this parameter immediately return our response as soon as callback is called
-    context.callbackWaitsForEmptyEventLoop = false;
+    // context.callbackWaitsForEmptyEventLoop = false;
     
     //get category ID passed as a POST parameter from API gateway
     let jsonBody = event['body-json'];

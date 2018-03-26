@@ -35,7 +35,7 @@ db = null; //we will populate this object with a connection from RDS.
 
 exports.handler = function(event, context, callback) {
     //this parameter immediately return our response as soon as callback is called
-    context.callbackWaitsForEmptyEventLoop = false;
+    // context.callbackWaitsForEmptyEventLoop = false;
     
     ssm.getParameters(params, function(err, data) {
         if (err){
