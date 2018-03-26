@@ -1,5 +1,6 @@
 #ignore all constant files
 config.js
+confidential-fcm.keys
 LAMBDA_crawlGoodFon/
 LAMBDA_getCategories/node_modules/
 LAMBDA_getImagesByCategory/node_modules/
