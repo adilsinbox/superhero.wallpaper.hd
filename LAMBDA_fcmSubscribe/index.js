@@ -29,6 +29,26 @@ admin.initializeApp({
 //we are initializing the firebase admin outside of handler function on purpose.
 //read more about it here https://groups.google.com/forum/#!topic/firebase-talk/aBonTOiQJWA
 
+var DB_DETAILS =  {
+    host: null,
+    user: null,
+    password: null,
+    database: null
+};
+
+var ssm = new AWS.SSM(),
+params = {
+    Names: [ 
+        constants.DB_HOST,
+        constants.DB_USER,
+        constants.DB_PASSWORD,
+        constants.DB_DATABASE
+    ],
+    WithDecryption: true
+}, 
+db = null; //we will populate this object with a connection from RDS.
+
+
 exports.handler = (event, context, callback) => {
     
     //setting the below attribute ensures our Lambda function returns control as soon as callback() is invoked
@@ -47,19 +67,6 @@ exports.handler = (event, context, callback) => {
     //mobile_id is a unique device identifier generated for each device
     let mobile_id = jsonBody.mobile_id;
     
-    
-    var ssm = new AWS.SSM();
-    var params = {
-        Names: [ 
-            constants.DB_HOST,
-            constants.DB_USER,
-            constants.DB_PASSWORD,
-            constants.DB_DATABASE
-        ],
-        WithDecryption: true
-    };
-    
-    
     ssm.getParameters(params, function(err, data) {
         if (err){
             let response = {
@@ -75,12 +82,6 @@ exports.handler = (event, context, callback) => {
         }
         else{
             //successfully retrieved the configuration values, lets identify what is what
-            let DB_DETAILS =  {
-                host: null,
-                user: null,
-                password: null,
-                database: null
-            };
             
             data.Parameters.map(param => {
                 switch(param.Name){
@@ -106,7 +107,8 @@ exports.handler = (event, context, callback) => {
             });
             
             //our database configuration. I am using an RDS MySQL instance on AWS
-            let db = mysql.createConnection(DB_DETAILS);
+            db = mysql.createConnection(DB_DETAILS);
+            
             db.query(
                 "SELECT * FROM user WHERE mobile_id = ?",
                 [mobile_id],
@@ -114,6 +116,11 @@ exports.handler = (event, context, callback) => {
                     //delete the firebase object. This is especially important in lambda
                     //admin.app('[DEFAULT]').delete();
                     if(err){
+                        
+                        //closing the db connection to avoid error 1040 (too many connections error from MySQL RDS)
+                        //need to test this with at least 1000 concurrent invocations to this lambda function.
+                        db.end();
+                        
                         let response = {
                             "status": 0,
                             "msg": "Something went wrong. Looks like the Hulk accidently smashed our servers!",
@@ -123,7 +130,7 @@ exports.handler = (event, context, callback) => {
                         }
                         callback(null, response);
                     }else{
-
+                        
                         if (users.length > 0) {
                             //if the mobile_id already exists in our database, simply update the FCM token for all matching mobile_ids
                             db.query(
@@ -131,7 +138,12 @@ exports.handler = (event, context, callback) => {
                                 [fcm, moment().format("YYYY-MM-DD HH:mm:ss"), mobile_id],
                                 function (err, status) {
                                     
+                                    //closing the db connection to avoid error 1040 (too many connections error from MySQL RDS)
+                                    //need to test this with at least 1000 concurrent invocations to this lambda function.
+                                    db.end();
+                                    
                                     if(err){
+                                        
                                         //delete the firebase object. This is especially important in lambda
                                         //admin.app('[DEFAULT]').delete();
                                         let response = {
@@ -186,6 +198,10 @@ exports.handler = (event, context, callback) => {
                                     "INSERT INTO user set ? ",
                                     data,
                                     function (err, status) {
+                                        
+                                        //closing the db connection to avoid error 1040 (too many connections error from MySQL RDS)
+                                        //need to test this with at least 1000 concurrent invocations to this lambda function.
+                                        db.end();
                                         
                                         if (err) {
                                             //delete the firebase object. This is especially important in lambda
